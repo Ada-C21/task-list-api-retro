@@ -1,11 +1,31 @@
 import datetime
+import os
 from flask import Blueprint, jsonify, abort, make_response, request
 from app import db
 from .models.task import Task
 from .models.goal import Goal
+import requests
+
+SLACK_API_URL = "https://slack.com/api/chat.postMessage"
+SLACK_BOT_TOKEN = os.environ.get("SLACK_BOT_TOKEN")
 
 task_bp = Blueprint("task", __name__, url_prefix="/tasks")
 goal_bp = Blueprint("goal", __name__, url_prefix="/goals")
+
+def notify_complete(task):
+    if not SLACK_BOT_TOKEN:
+        return
+    
+    headers = {
+        "Authorization": f"Bearer {SLACK_BOT_TOKEN}",
+    }
+
+    data = {
+        "channel": "task-notifications-demo",
+        "text": f'Task "{task.title}" has been marked complete',
+    }
+
+    requests.post(SLACK_API_URL, headers=headers, data=data)
 
 @task_bp.route("", methods=["GET"])
 def task_index():
@@ -91,6 +111,8 @@ def mark_complete(task_id):
     task.completed_at = datetime.datetime.now(datetime.timezone.utc)
 
     db.session.commit()
+
+    notify_complete(task)
 
     return dict(task=task.to_dict())
 
