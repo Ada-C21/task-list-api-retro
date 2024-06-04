@@ -1,6 +1,6 @@
 import datetime
 import os
-from flask import Blueprint, jsonify, abort, make_response, request
+from flask import Blueprint, abort, make_response, request
 from app import db
 from .models.task import Task
 from .models.goal import Goal
@@ -27,7 +27,7 @@ def notify_complete(task):
 
     requests.post(SLACK_API_URL, headers=headers, data=data)
 
-@task_bp.route("", methods=["GET"])
+@task_bp.get("")
 def task_index():
     sort_dir = request.args.get("sort")
 
@@ -40,9 +40,9 @@ def task_index():
 
     tasks = db.session.scalars(query)
 
-    return jsonify([task.to_dict() for task in tasks])
+    return [task.to_dict() for task in tasks]
 
-@task_bp.route("/<task_id>", methods=["GET"])
+@task_bp.get("/<task_id>")
 def get_one_task(task_id):
     query = db.select(Task).where(Task.task_id == task_id)
     task = db.session.scalar(query)
@@ -54,7 +54,7 @@ def get_one_task(task_id):
 
     return dict(task=task.to_dict())
 
-@task_bp.route("", methods=["POST"])
+@task_bp.post("")
 def create_task():
     data = request.get_json()
 
@@ -68,7 +68,7 @@ def create_task():
 
     return dict(task=task.to_dict()), 201
 
-@task_bp.route("/<task_id>", methods=["PUT"])
+@task_bp.put("/<task_id>")
 def update_task(task_id):
     data = request.get_json()
     query = db.select(Task).where(Task.task_id == task_id)
@@ -89,7 +89,7 @@ def update_task(task_id):
 
     return dict(task=task.to_dict())
 
-@task_bp.route("/<task_id>", methods=["DELETE"])
+@task_bp.delete("/<task_id>")
 def delete_task(task_id):
     query = db.select(Task).where(Task.task_id == task_id)
     task = db.session.scalar(query)
@@ -104,7 +104,7 @@ def delete_task(task_id):
 
     return dict(details=f'Task {task.task_id} "{task.title}" successfully deleted')
 
-@task_bp.route("/<task_id>/mark_complete", methods=["PATCH"])
+@task_bp.patch("/<task_id>/mark_complete")
 def mark_complete(task_id):
     query = db.select(Task).where(Task.task_id == task_id)
     task = db.session.scalar(query)
@@ -122,7 +122,7 @@ def mark_complete(task_id):
 
     return dict(task=task.to_dict())
 
-@task_bp.route("/<task_id>/mark_incomplete", methods=["PATCH"])
+@task_bp.patch("/<task_id>/mark_incomplete")
 def mark_incomplete(task_id):
     query = db.select(Task).where(Task.task_id == task_id)
     task = db.session.scalar(query)
@@ -138,14 +138,14 @@ def mark_incomplete(task_id):
 
     return dict(task=task.to_dict())
 
-@goal_bp.route("", methods=["GET"])
+@goal_bp.get("")
 def goal_index():
     query = db.select(Goal)
     goals = db.session.scalars(query)
 
-    return jsonify([goal.to_dict() for goal in goals])
+    return [goal.to_dict() for goal in goals]
 
-@goal_bp.route("/<goal_id>", methods=["GET"])
+@goal_bp.get("/<goal_id>")
 def get_one_goal(goal_id):
     query = db.select(Goal).where(Goal.goal_id == goal_id)
     goal = db.session.scalar(query)
@@ -157,7 +157,7 @@ def get_one_goal(goal_id):
 
     return dict(goal=goal.to_dict())
 
-@goal_bp.route("", methods=["POST"])
+@goal_bp.post("")
 def create_goal():
     data = request.get_json()
 
@@ -171,7 +171,7 @@ def create_goal():
 
     return dict(goal=goal.to_dict()), 201
 
-@goal_bp.route("/<goal_id>", methods=["PUT"])
+@goal_bp.put("/<goal_id>")
 def update_goal(goal_id):
     data = request.get_json()
     query = db.select(Goal).where(Goal.goal_id == goal_id)
@@ -191,7 +191,7 @@ def update_goal(goal_id):
 
     return dict(goal=goal.to_dict())
 
-@goal_bp.route("/<goal_id>", methods=["DELETE"])
+@goal_bp.delete("/<goal_id>")
 def delete_goal(goal_id):
     query = db.select(Goal).where(Goal.goal_id == goal_id)
     goal = db.session.scalar(query)
@@ -206,7 +206,7 @@ def delete_goal(goal_id):
 
     return dict(details=f'Goal {goal.goal_id} "{goal.title}" successfully deleted')
 
-@goal_bp.route("/<goal_id>/tasks", methods=["POST"])
+@goal_bp.post("/<goal_id>/tasks")
 def set_goal_tasks(goal_id):
     data = request.get_json()
     query = db.select(Goal).where(Goal.goal_id == goal_id)
@@ -235,7 +235,7 @@ def set_goal_tasks(goal_id):
 
     return dict(id=goal.goal_id, task_ids=[task.task_id for task in tasks])
 
-@goal_bp.route("/<goal_id>/tasks", methods=["GET"])
+@goal_bp.get("/<goal_id>/tasks")
 def get_goal_tasks(goal_id):
     query = db.select(Goal).where(Goal.goal_id == goal_id)
     goal = db.session.scalar(query)
