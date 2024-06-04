@@ -1,5 +1,6 @@
 import pytest
 from app.models.goal import Goal
+from app import db
 
 def test_get_goals_no_saved_goals(client):
     # Act
@@ -88,7 +89,7 @@ def test_update_goal(client, one_goal):
             "title": "Updated Goal Title",
         }
     }
-    goal = Goal.query.get(1)
+    goal = db.session.scalar(db.select(Goal).where(Goal.goal_id == 1))
     assert goal.title == "Updated Goal Title"
 
 

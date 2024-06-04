@@ -32,17 +32,20 @@ def task_index():
     sort_dir = request.args.get("sort")
 
     if sort_dir == "asc":
-        tasks = Task.query.order_by(Task.title).all()
+        query = db.select(Task).order_by(Task.title)
     elif sort_dir == "desc":
-        tasks = Task.query.order_by(Task.title.desc()).all()
+        query = db.select(Task).order_by(Task.title.desc())
     else:
-        tasks = Task.query.all()
+        query = db.select(Task)
+
+    tasks = db.session.scalars(query)
 
     return jsonify([task.to_dict() for task in tasks])
 
 @task_bp.route("/<task_id>", methods=["GET"])
 def get_one_task(task_id):
-    task = Task.query.get(task_id)
+    query = db.select(Task).where(Task.task_id == task_id)
+    task = db.session.scalar(query)
 
     if not task:
         abort(make_response(dict(
@@ -68,7 +71,8 @@ def create_task():
 @task_bp.route("/<task_id>", methods=["PUT"])
 def update_task(task_id):
     data = request.get_json()
-    task = Task.query.get(task_id)
+    query = db.select(Task).where(Task.task_id == task_id)
+    task = db.session.scalar(query)
 
     if not task:
         abort(make_response(dict(
@@ -87,7 +91,8 @@ def update_task(task_id):
 
 @task_bp.route("/<task_id>", methods=["DELETE"])
 def delete_task(task_id):
-    task = Task.query.get(task_id)
+    query = db.select(Task).where(Task.task_id == task_id)
+    task = db.session.scalar(query)
 
     if not task:
         abort(make_response(dict(
@@ -101,7 +106,8 @@ def delete_task(task_id):
 
 @task_bp.route("/<task_id>/mark_complete", methods=["PATCH"])
 def mark_complete(task_id):
-    task = Task.query.get(task_id)
+    query = db.select(Task).where(Task.task_id == task_id)
+    task = db.session.scalar(query)
 
     if not task:
         abort(make_response(dict(
@@ -118,7 +124,8 @@ def mark_complete(task_id):
 
 @task_bp.route("/<task_id>/mark_incomplete", methods=["PATCH"])
 def mark_incomplete(task_id):
-    task = Task.query.get(task_id)
+    query = db.select(Task).where(Task.task_id == task_id)
+    task = db.session.scalar(query)
 
     if not task:
         abort(make_response(dict(
@@ -133,13 +140,15 @@ def mark_incomplete(task_id):
 
 @goal_bp.route("", methods=["GET"])
 def goal_index():
-    goals = Goal.query.all()
+    query = db.select(Goal)
+    goals = db.session.scalars(query)
 
     return jsonify([goal.to_dict() for goal in goals])
 
 @goal_bp.route("/<goal_id>", methods=["GET"])
 def get_one_goal(goal_id):
-    goal = Goal.query.get(goal_id)
+    query = db.select(Goal).where(Goal.goal_id == goal_id)
+    goal = db.session.scalar(query)
 
     if not goal:
         abort(make_response(dict(
@@ -165,7 +174,8 @@ def create_goal():
 @goal_bp.route("/<goal_id>", methods=["PUT"])
 def update_goal(goal_id):
     data = request.get_json()
-    goal = Goal.query.get(goal_id)
+    query = db.select(Goal).where(Goal.goal_id == goal_id)
+    goal = db.session.scalar(query)
 
     if not goal:
         abort(make_response(dict(
@@ -183,7 +193,8 @@ def update_goal(goal_id):
 
 @goal_bp.route("/<goal_id>", methods=["DELETE"])
 def delete_goal(goal_id):
-    goal = Goal.query.get(goal_id)
+    query = db.select(Goal).where(Goal.goal_id == goal_id)
+    goal = db.session.scalar(query)
 
     if not goal:
         abort(make_response(dict(
@@ -198,7 +209,8 @@ def delete_goal(goal_id):
 @goal_bp.route("/<goal_id>/tasks", methods=["POST"])
 def set_goal_tasks(goal_id):
     data = request.get_json()
-    goal = Goal.query.get(goal_id)
+    query = db.select(Goal).where(Goal.goal_id == goal_id)
+    goal = db.session.scalar(query)
 
     if not goal:
         abort(make_response(dict(
@@ -209,7 +221,8 @@ def set_goal_tasks(goal_id):
         task_ids = data["task_ids"]
         tasks = []
         for task_id in task_ids:
-            task = Task.query.get(task_id)
+            query = db.select(Task).where(Task.task_id == task_id)
+            task = db.session.scalar(query)
             if not task:
                 abort(make_response(dict(details=f"Unknown Task id: {task_id}"), 404))
             tasks.append(task)
@@ -224,7 +237,8 @@ def set_goal_tasks(goal_id):
 
 @goal_bp.route("/<goal_id>/tasks", methods=["GET"])
 def get_goal_tasks(goal_id):
-    goal = Goal.query.get(goal_id)
+    query = db.select(Goal).where(Goal.goal_id == goal_id)
+    goal = db.session.scalar(query)
 
     if not goal:
         abort(make_response(dict(

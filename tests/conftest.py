@@ -3,7 +3,7 @@ from app import create_app
 from app.models.task import Task
 from app.models.goal import Goal
 from app import db
-from datetime import datetime
+import datetime
 from flask.signals import request_finished
 
 
@@ -64,8 +64,9 @@ def three_tasks(app):
 # valid completed_at date
 @pytest.fixture
 def completed_task(app):
+    completed_at = datetime.datetime.now(datetime.timezone.utc)
     new_task = Task(
-        title="Go on my daily walk 🏞", description="Notice something new every day", completed_at=datetime.utcnow())
+        title="Go on my daily walk 🏞", description="Notice something new every day", completed_at=completed_at)
     db.session.add(new_task)
     db.session.commit()
 

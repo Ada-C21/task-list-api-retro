@@ -1,4 +1,5 @@
 from app.models.task import Task
+from app import db
 import pytest
 
 
@@ -77,7 +78,7 @@ def test_create_task(client):
             "is_complete": False
         }
     }
-    new_task = Task.query.get(1)
+    new_task = db.session.scalar(db.select(Task).where(Task.task_id == 1))
     assert new_task
     assert new_task.title == "A Brand New Task"
     assert new_task.description == "Test Description"
@@ -103,7 +104,7 @@ def test_update_task(client, one_task):
             "is_complete": False
         }
     }
-    task = Task.query.get(1)
+    task = db.session.scalar(db.select(Task).where(Task.task_id == 1))
     assert task.title == "Updated Task Title"
     assert task.description == "Updated Test Description"
     assert task.completed_at == None
@@ -133,7 +134,7 @@ def test_delete_task(client, one_task):
     assert response_body == {
         "details": 'Task 1 "Go on my daily walk 🏞" successfully deleted'
     }
-    assert Task.query.get(1) == None
+    assert db.session.scalar(db.select(Task).where(Task.task_id == 1)) == None
 
 
 def test_delete_task_not_found(client):

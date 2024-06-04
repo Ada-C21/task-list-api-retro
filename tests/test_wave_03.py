@@ -2,6 +2,7 @@ import unittest
 from unittest.mock import Mock, patch
 from datetime import datetime
 from app.models.task import Task
+from app import db
 import pytest
 
 
@@ -38,7 +39,7 @@ def test_mark_complete_on_incomplete_task(client, one_task):
             "is_complete": True
         }
     }
-    assert Task.query.get(1).completed_at
+    assert db.session.scalar(db.select(Task).where(Task.task_id == 1)).completed_at
 
 
 def test_mark_incomplete_on_complete_task(client, completed_task):
@@ -57,7 +58,7 @@ def test_mark_incomplete_on_complete_task(client, completed_task):
             "is_complete": False
         }
     }
-    assert Task.query.get(1).completed_at == None
+    assert db.session.scalar(db.select(Task).where(Task.task_id == 1)).completed_at == None
 
 
 def test_mark_complete_on_completed_task(client, completed_task):
@@ -93,7 +94,7 @@ def test_mark_complete_on_completed_task(client, completed_task):
             "is_complete": True
         }
     }
-    assert Task.query.get(1).completed_at
+    assert db.session.scalar(db.select(Task).where(Task.task_id == 1)).completed_at
 
 
 def test_mark_incomplete_on_incomplete_task(client, one_task):
@@ -112,7 +113,7 @@ def test_mark_incomplete_on_incomplete_task(client, one_task):
             "is_complete": False
         }
     }
-    assert Task.query.get(1).completed_at == None
+    assert db.session.scalar(db.select(Task).where(Task.task_id == 1)).completed_at == None
 
 
 def test_mark_complete_missing_task(client):
