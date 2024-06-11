@@ -78,7 +78,7 @@ def test_create_task(client):
             "is_complete": False
         }
     }
-    new_task = db.session.scalar(db.select(Task).where(Task.task_id == 1))
+    new_task = db.session.scalar(db.select(Task).where(Task.id == 1))
     assert new_task
     assert new_task.title == "A Brand New Task"
     assert new_task.description == "Test Description"
@@ -104,7 +104,7 @@ def test_update_task(client, one_task):
             "is_complete": False
         }
     }
-    task = db.session.scalar(db.select(Task).where(Task.task_id == 1))
+    task = db.session.scalar(db.select(Task).where(Task.id == 1))
     assert task.title == "Updated Task Title"
     assert task.description == "Updated Test Description"
     assert task.completed_at == None
@@ -126,15 +126,10 @@ def test_update_task_not_found(client):
 def test_delete_task(client, one_task):
     # Act
     response = client.delete("/tasks/1")
-    response_body = response.get_json()
 
     # Assert
-    assert response.status_code == 200
-    assert "details" in response_body
-    assert response_body == {
-        "details": 'Task 1 "Go on my daily walk 🏞" successfully deleted'
-    }
-    assert db.session.scalar(db.select(Task).where(Task.task_id == 1)) == None
+    assert response.status_code == 204
+    assert db.session.scalar(db.select(Task).where(Task.id == 1)) == None
 
 
 def test_delete_task_not_found(client):

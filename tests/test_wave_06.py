@@ -20,7 +20,7 @@ def test_post_task_ids_to_goal(client, one_goal, three_tasks):
     }
 
     # Check that Goal was updated in the db
-    goal = db.session.scalar(db.select(Goal).where(Goal.goal_id == 1))
+    goal = db.session.scalar(db.select(Goal).where(Goal.id == 1))
     assert len(goal.tasks) == 3
 
 
@@ -39,7 +39,7 @@ def test_post_task_ids_to_goal_already_with_goals(client, one_task_belongs_to_on
         "id": 1,
         "task_ids": [1, 4]
     }
-    goal = db.session.scalar(db.select(Goal).where(Goal.goal_id == 1))
+    goal = db.session.scalar(db.select(Goal).where(Goal.id == 1))
     assert len(goal.tasks) == 2
 
 

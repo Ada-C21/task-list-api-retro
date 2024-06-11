@@ -39,7 +39,7 @@ def test_mark_complete_on_incomplete_task(client, one_task):
             "is_complete": True
         }
     }
-    assert db.session.scalar(db.select(Task).where(Task.task_id == 1)).completed_at
+    assert db.session.scalar(db.select(Task).where(Task.id == 1)).completed_at
 
 
 def test_mark_incomplete_on_complete_task(client, completed_task):
@@ -58,7 +58,7 @@ def test_mark_incomplete_on_complete_task(client, completed_task):
             "is_complete": False
         }
     }
-    assert db.session.scalar(db.select(Task).where(Task.task_id == 1)).completed_at == None
+    assert db.session.scalar(db.select(Task).where(Task.id == 1)).completed_at == None
 
 
 def test_mark_complete_on_completed_task(client, completed_task):
@@ -94,7 +94,7 @@ def test_mark_complete_on_completed_task(client, completed_task):
             "is_complete": True
         }
     }
-    assert db.session.scalar(db.select(Task).where(Task.task_id == 1)).completed_at
+    assert db.session.scalar(db.select(Task).where(Task.id == 1)).completed_at
 
 
 def test_mark_incomplete_on_incomplete_task(client, one_task):
@@ -113,7 +113,7 @@ def test_mark_incomplete_on_incomplete_task(client, one_task):
             "is_complete": False
         }
     }
-    assert db.session.scalar(db.select(Task).where(Task.task_id == 1)).completed_at == None
+    assert db.session.scalar(db.select(Task).where(Task.id == 1)).completed_at == None
 
 
 def test_mark_complete_missing_task(client):

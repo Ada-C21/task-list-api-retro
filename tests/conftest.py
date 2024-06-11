@@ -5,12 +5,16 @@ from app.models.goal import Goal
 from app import db
 import datetime
 from flask.signals import request_finished
-
+import os
 
 @pytest.fixture
 def app():
     # create the app with a test config dictionary
-    app = create_app({"TESTING": True})
+    app = create_app({
+        "TESTING": True,
+        "SQLALCHEMY_DATABASE_URI": os.environ.get(
+            "SQLALCHEMY_TEST_DATABASE_URI")
+        })
 
     @request_finished.connect_via(app)
     def expire_session(sender, response, **extra):

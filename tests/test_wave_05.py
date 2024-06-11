@@ -89,7 +89,7 @@ def test_update_goal(client, one_goal):
             "title": "Updated Goal Title",
         }
     }
-    goal = db.session.scalar(db.select(Goal).where(Goal.goal_id == 1))
+    goal = db.session.scalar(db.select(Goal).where(Goal.id == 1))
     assert goal.title == "Updated Goal Title"
 
 
@@ -108,14 +108,9 @@ def test_update_goal_not_found(client):
 def test_delete_goal(client, one_goal):
     # Act
     response = client.delete("/goals/1")
-    response_body = response.get_json()
 
     # Assert
-    assert response.status_code == 200
-    assert "details" in response_body
-    assert response_body == {
-        "details": 'Goal 1 "Build a habit of going outside daily" successfully deleted'
-    }
+    assert response.status_code == 204
 
     # Check that the goal was deleted
     response = client.get("/goals/1")
