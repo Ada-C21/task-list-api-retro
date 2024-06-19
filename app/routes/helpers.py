@@ -13,6 +13,12 @@ def validate_model(cls, model_id):
 
     return model
 
+# apply to route handler as
+# @serialize_with(SomeSerializer(), status)
+# SomeSerializer is a class that has a serialize method
+# serialize takes a single argument, the data to serialize
+# and returns a suitable Flask Response or something that can
+# be converted to a Flask response (e.g. a dict)
 def serialize_with(serializer, status=200):
     def decorator(fn):
         @wraps(fn)
