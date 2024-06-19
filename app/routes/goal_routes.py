@@ -2,33 +2,32 @@ from flask import Blueprint, abort, make_response, request, Response
 from ..db import db
 from ..models.task import Task
 from ..models.goal import Goal
-from .helpers import validate_model
-from functools import wraps
+from .goal_helpers import require_goal
+from .helpers import serialize_with
+from ..serializers.one_goal import OneGoal
+from ..serializers.list_of_goals import ListOfGoals
+from ..serializers.empty_body import EmptyBody
+from ..serializers.shallow_goal_with_tasks import ShallowGoalWithTasks
+from ..serializers.goal_with_tasks import GoalWithTasks
 
 bp = Blueprint("goal", __name__, url_prefix="/goals")
 
 @bp.get("")
+@serialize_with(ListOfGoals())
 def goal_index():
     query = db.select(Goal)
     goals = db.session.scalars(query)
 
-    return [goal.to_dict() for goal in goals]
-
-# more robust decorator (uses wraps and variadic params)
-def require_goal(fn):
-    @wraps(fn)
-    def wrapper(*args, goal_id, **kwargs):
-        goal = validate_model(Goal, goal_id)
-        return fn(*args, goal=goal, **kwargs)
-
-    return wrapper
+    return goals
 
 @bp.get("/<goal_id>")
 @require_goal
+@serialize_with(OneGoal())
 def get_one_goal(goal):
-    return dict(goal=goal.to_dict())
+    return goal
 
 @bp.post("")
+@serialize_with(OneGoal(), 201)
 def create_goal():
     data = request.get_json()
 
@@ -40,10 +39,11 @@ def create_goal():
     db.session.add(goal)
     db.session.commit()
 
-    return dict(goal=goal.to_dict()), 201
+    return goal
 
 @bp.put("/<goal_id>")
 @require_goal
+@serialize_with(OneGoal())
 def update_goal(goal):
     data = request.get_json()
 
@@ -54,18 +54,18 @@ def update_goal(goal):
 
     db.session.commit()
 
-    return dict(goal=goal.to_dict())
+    return goal
 
 @bp.delete("/<goal_id>")
 @require_goal
+@serialize_with(EmptyBody(), 204)
 def delete_goal(goal):
     db.session.delete(goal)
     db.session.commit()
 
-    return Response(status=204, mimetype="application/json")
-
 @bp.post("/<goal_id>/tasks")
 @require_goal
+@serialize_with(ShallowGoalWithTasks())
 def set_goal_tasks(goal):
     data = request.get_json()
 
@@ -85,13 +85,10 @@ def set_goal_tasks(goal):
 
     db.session.commit()
 
-    return dict(id=goal.id, task_ids=[task.id for task in tasks])
+    return goal
 
 @bp.get("/<goal_id>/tasks")
 @require_goal
+@serialize_with(GoalWithTasks())
 def get_goal_tasks(goal):
-    response = goal.to_dict()
-    tasks = goal.tasks
-    response["tasks"] = [task.to_dict() for task in tasks]
-
-    return response
+    return goal

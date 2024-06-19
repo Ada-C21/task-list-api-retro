@@ -4,8 +4,11 @@ from flask import Blueprint, abort, make_response, request, Response
 from ..db import db
 from ..models.task import Task
 import requests
-from .helpers import validate_model
-from functools import wraps
+from .helpers import serialize_with
+from .task_helpers import require_task
+from ..serializers.one_task import OneTask
+from ..serializers.empty_body import EmptyBody
+from ..serializers.list_of_tasks import ListOfTasks
 
 SLACK_API_URL = "https://slack.com/api/chat.postMessage"
 SLACK_BOT_TOKEN = os.environ.get("SLACK_BOT_TOKEN")
@@ -28,6 +31,7 @@ def notify_complete(task):
     requests.post(SLACK_API_URL, headers=headers, data=data)
 
 @bp.get("")
+@serialize_with(ListOfTasks())
 def task_index():
     sort_dir = request.args.get("sort")
 
@@ -40,32 +44,16 @@ def task_index():
 
     tasks = db.session.scalars(query)
 
-    return [task.to_dict() for task in tasks]
-
-# incomplete livecode decorator version
-# def require_task(fn):
-#     def wrapper(task_id):
-#         task = validate_model(Task, task_id)
-#         return fn(task=task)
-
-#     return wrapper
-
-# more robust decorator (uses wraps and variadic params)
-def require_task(fn):
-    @wraps(fn)
-    def wrapper(*args, task_id, **kwargs):
-        task = validate_model(Task, task_id)
-        return fn(*args, task=task, **kwargs)
-
-    return wrapper
-
+    return tasks
 
 @bp.get("/<task_id>")
 @require_task
+@serialize_with(OneTask())
 def get_one_task(task):
-    return dict(task=task.to_dict())
+    return task
 
 @bp.post("")
+@serialize_with(OneTask(), 201)
 def create_task():
     data = request.get_json()
 
@@ -77,10 +65,11 @@ def create_task():
     db.session.add(task)
     db.session.commit()
 
-    return dict(task=task.to_dict()), 201
+    return task
 
 @bp.put("/<task_id>")
 @require_task
+@serialize_with(OneTask())
 def update_task(task):
     data = request.get_json()
 
@@ -92,18 +81,18 @@ def update_task(task):
 
     db.session.commit()
 
-    return dict(task=task.to_dict())
+    return task
 
 @bp.delete("/<task_id>")
 @require_task
+@serialize_with(EmptyBody(), 204)
 def delete_task(task):
     db.session.delete(task)
     db.session.commit()
 
-    return Response(status=204, mimetype="application/json")
-
 @bp.patch("/<task_id>/mark_complete")
 @require_task
+@serialize_with(OneTask())
 def mark_complete(task):
     task.completed_at = datetime.datetime.now(datetime.timezone.utc)
 
@@ -111,13 +100,14 @@ def mark_complete(task):
 
     notify_complete(task)
 
-    return dict(task=task.to_dict())
+    return task
 
 @bp.patch("/<task_id>/mark_incomplete")
 @require_task
+@serialize_with(OneTask())
 def mark_incomplete(task):
     task.completed_at = None
 
     db.session.commit()
 
-    return dict(task=task.to_dict())
+    return task
