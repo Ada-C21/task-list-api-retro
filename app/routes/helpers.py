@@ -1,12 +1,12 @@
-from ..db import db
 from flask import abort, make_response
 from functools import wraps
+from app.errors.invalid_request_data_error import InvalidRequestDataError
+from app.errors.record_not_found_error import RecordNotFoundError
 
 def validate_model(cls, model_id):
-    query = db.select(cls).where(cls.id == model_id)
-    model = db.session.scalar(query)
-
-    if not model:
+    try:
+        model = cls.get_by_id(model_id)
+    except RecordNotFoundError:
         abort(make_response(dict(
             details=f"Unknown {cls.__name__} id: {model_id}"
         ), 404))
@@ -29,3 +29,13 @@ def serialize_with(serializer, status=200):
         return inner
     
     return decorator
+
+def handle_invalid_data(fn):
+    @wraps(fn)
+    def inner(*args, **kwargs):
+        try:
+            return fn(*args, **kwargs)
+        except InvalidRequestDataError:
+            abort(make_response(dict(details="Invalid data"), 400))
+
+    return inner

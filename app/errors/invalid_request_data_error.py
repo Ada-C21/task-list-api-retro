@@ -1,0 +1,2 @@
+class InvalidRequestDataError(Exception):
+    pass

@@ -3,8 +3,9 @@ from sqlalchemy import ForeignKey
 from typing import Optional
 from ..db import db
 import datetime
+from .model_mixin import ModelMixin
 
-class Task(db.Model):
+class Task(db.Model, ModelMixin):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     title: Mapped[str]
     description: Mapped[str]
@@ -14,6 +15,10 @@ class Task(db.Model):
 
     def is_complete(self):
         return self.completed_at is not None
+
+    def update_from_dict(self, data):
+        self.title = data["title"]
+        self.description = data["description"]
 
     def to_dict(self):
         data = dict(
