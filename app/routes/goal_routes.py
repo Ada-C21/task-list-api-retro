@@ -44,7 +44,6 @@ def delete_goal(goal):
 @require_goal
 @serialize_with(ShallowGoalWithTasks())
 @handle_invalid_data
-@handle_invalid_data
 def set_goal_tasks(goal):
     return GoalService(db).set_goal_tasks(goal, request.get_json())
 
