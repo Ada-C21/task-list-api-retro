@@ -102,3 +102,8 @@ def one_task_belongs_to_one_goal(app, one_goal, one_task):
     goal.tasks.append(task)
     db.session.commit()
     return goal
+
+
+@pytest.fixture
+def test_db(app):
+    return db

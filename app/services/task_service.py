@@ -1,7 +1,9 @@
 from app.models.task import Task
 from app.errors.invalid_request_data_error import InvalidRequestDataError
+from app.errors.record_not_found_error import RecordNotFoundError
 import datetime
 from ..ext.slack import notify_complete
+from sqlalchemy.exc import InvalidRequestError
 
 class TaskService:
     def __init__(self, db) -> None:
@@ -45,7 +47,12 @@ class TaskService:
 
     def delete_task(self, task):
         db = self.db
-        db.session.delete(task)
+
+        try:
+            db.session.delete(task)
+        except InvalidRequestError:
+            raise RecordNotFoundError()
+        
         db.session.commit()
 
     def mark_complete(self, task):
