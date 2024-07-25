@@ -21,3 +21,12 @@ class UserService:
             raise InvalidRequestDataError()
 
         return UserDto(user)
+
+    def get_by_auth(self, email, password):
+        user = User.get_by_email(email)
+        matches = bcrypt.check_password_hash(user.pwd_hash, password)
+
+        if not matches:
+            raise RecordNotFoundError()
+        
+        return UserDto(user)

@@ -1,6 +1,7 @@
 from .helpers import validate_model
 from functools import wraps
 from ..models.task import Task
+from flask import g
 
 # incomplete livecode decorator version
 # def require_task(fn):
@@ -14,7 +15,7 @@ from ..models.task import Task
 def require_task(fn):
     @wraps(fn)
     def wrapper(*args, task_id, **kwargs):
-        task = validate_model(Task, task_id)
+        task = validate_model(Task, task_id, user=g.user)
         return fn(*args, task=task, **kwargs)
 
     return wrapper

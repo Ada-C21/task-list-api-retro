@@ -12,6 +12,8 @@ class Task(db.Model, ModelMixin):
     completed_at: Mapped[Optional[datetime.datetime]]
     goal_id: Mapped[Optional[int]] = mapped_column(ForeignKey("goal.id"))
     goal: Mapped[Optional["Goal"]] = relationship(back_populates="tasks")
+    user_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
+    user: Mapped["User"] = relationship(back_populates="tasks")
 
     def is_complete(self):
         return self.completed_at is not None

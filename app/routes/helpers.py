@@ -3,9 +3,13 @@ from functools import wraps
 from app.errors.invalid_request_data_error import InvalidRequestDataError
 from app.errors.record_not_found_error import RecordNotFoundError
 
-def validate_model(cls, model_id):
+def validate_model(cls, model_id, user=None):
     try:
         model = cls.get_by_id(model_id)
+
+        if user and model.user_id != user.id:
+            raise RecordNotFoundError()
+
     except RecordNotFoundError:
         abort(make_response(dict(
             details=f"Unknown {cls.__name__} id: {model_id}"

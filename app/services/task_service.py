@@ -9,22 +9,26 @@ class TaskService:
     def __init__(self, db) -> None:
         self.db = db
 
-    def get_tasks(self, sort_dir=None):
+    def get_tasks(self, user, sort_dir=None):
         db = self.db
+
+        query = db.select(Task).where(Task.user_id == user.id)
+
         if sort_dir == "asc":
-            query = db.select(Task).order_by(Task.title)
+            query = query.order_by(Task.title)
         elif sort_dir == "desc":
-            query = db.select(Task).order_by(Task.title.desc())
+            query = query.order_by(Task.title.desc())
         else:
-            query = db.select(Task)
+            query = query.order_by(Task.id)
 
         tasks = db.session.scalars(query)
 
         return tasks
 
-    def create_task(self, data):
+    def create_task(self, data, user):
         try:
             task = Task.from_dict(data)
+            task.user_id = user.id
         except KeyError:
             raise InvalidRequestDataError()
 
@@ -34,7 +38,10 @@ class TaskService:
 
         return task
 
-    def update_task(self, task, data):
+    def update_task(self, task, data, user):
+        if task.user_id != user.id:
+            raise RecordNotFoundError()
+
         try:
             task.update_from_dict(data)
         except KeyError:
@@ -45,7 +52,10 @@ class TaskService:
 
         return task
 
-    def delete_task(self, task):
+    def delete_task(self, task, user):
+        if task.user_id != user.id:
+            raise RecordNotFoundError()
+
         db = self.db
 
         try:
@@ -55,7 +65,10 @@ class TaskService:
         
         db.session.commit()
 
-    def mark_complete(self, task):
+    def mark_complete(self, task, user):
+        if task.user_id != user.id:
+            raise RecordNotFoundError()
+
         task.completed_at = datetime.datetime.now(datetime.timezone.utc)
 
         db = self.db
@@ -65,7 +78,10 @@ class TaskService:
 
         return task
 
-    def mark_incomplete(self, task):
+    def mark_incomplete(self, task, user):
+        if task.user_id != user.id:
+            raise RecordNotFoundError()
+
         task.completed_at = None
 
         db = self.db
