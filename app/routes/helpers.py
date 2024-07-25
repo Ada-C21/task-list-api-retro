@@ -23,12 +23,18 @@ def validate_model(cls, model_id, user=None):
 # serialize takes a single argument, the data to serialize
 # and returns a suitable Flask Response or something that can
 # be converted to a Flask response (e.g. a dict)
-def serialize_with(serializer, status=200):
+def serialize_with(serializer, status=200, response_modifier=None):
     def decorator(fn):
         @wraps(fn)
         def inner(*args, **kwargs):
             result = fn(*args, **kwargs)
-            return serializer.serialize(result), status
+            serialized_result = serializer.serialize(result)
+            response = make_response(serialized_result, status)
+
+            if response_modifier:
+                response_modifier(response=response, result=result)
+
+            return response
 
         return inner
     

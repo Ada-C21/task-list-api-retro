@@ -28,7 +28,9 @@ def create_app(config=None):
     db.init_app(app)
     migrate.init_app(app, db)
     bcrypt.init_app(app)
-    CORS(app)
+    CORS(app,
+         supports_credentials=True,
+         )
 
     # Register Blueprints here
     app.register_blueprint(goal_routes.bp)

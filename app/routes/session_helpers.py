@@ -11,7 +11,8 @@ def require_auth(db):
     def decorator(fn):
         @wraps(fn)
         def wrapped(*args, **kwargs):
-            session_id = request.headers.get("SessionID", default="")
+            # session_id = request.headers.get("SessionID", default="")
+            session_id = request.cookies.get("SessionID", default="")
 
             session_service = SessionService(db)
 
@@ -23,7 +24,9 @@ def require_auth(db):
             user = UserDto(session.user)
             g.user = user
             g.session_id = session_id
-            return fn(*args, **kwargs)
+            result = fn(*args, **kwargs)
+            response = make_response(result)
+            return response
         
         return wrapped
     
