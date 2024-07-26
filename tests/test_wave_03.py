@@ -6,7 +6,7 @@ from app import db
 import pytest
 
 
-def test_mark_complete_on_incomplete_task(client, one_task):
+def test_mark_complete_on_incomplete_task(client, one_task, one_session):
     # Arrange
     """
     The future Wave 4 adds special functionality to this route,
@@ -24,7 +24,7 @@ def test_mark_complete_on_incomplete_task(client, one_task):
         mock_get.return_value.status_code = 200
 
         # Act
-        response = client.patch("/tasks/1/mark_complete")
+        response = client.patch("/tasks/1/mark_complete", headers={"SessionID": one_session.id})
     response_body = response.get_json()
 
     # Assert
@@ -42,9 +42,9 @@ def test_mark_complete_on_incomplete_task(client, one_task):
     assert db.session.scalar(db.select(Task).where(Task.id == 1)).completed_at
 
 
-def test_mark_incomplete_on_complete_task(client, completed_task):
+def test_mark_incomplete_on_complete_task(client, completed_task, one_session):
     # Act
-    response = client.patch("/tasks/1/mark_incomplete")
+    response = client.patch("/tasks/1/mark_incomplete", headers={"SessionID": one_session.id})
     response_body = response.get_json()
 
     # Assert
@@ -61,7 +61,7 @@ def test_mark_incomplete_on_complete_task(client, completed_task):
     assert db.session.scalar(db.select(Task).where(Task.id == 1)).completed_at == None
 
 
-def test_mark_complete_on_completed_task(client, completed_task):
+def test_mark_complete_on_completed_task(client, completed_task, one_session):
     # Arrange
     """
     The future Wave 4 adds special functionality to this route,
@@ -79,7 +79,7 @@ def test_mark_complete_on_completed_task(client, completed_task):
         mock_get.return_value.status_code = 200
 
         # Act
-        response = client.patch("/tasks/1/mark_complete")
+        response = client.patch("/tasks/1/mark_complete", headers={"SessionID": one_session.id})
     response_body = response.get_json()
 
     # Assert
@@ -97,9 +97,9 @@ def test_mark_complete_on_completed_task(client, completed_task):
     assert db.session.scalar(db.select(Task).where(Task.id == 1)).completed_at
 
 
-def test_mark_incomplete_on_incomplete_task(client, one_task):
+def test_mark_incomplete_on_incomplete_task(client, one_task, one_session):
     # Act
-    response = client.patch("/tasks/1/mark_incomplete")
+    response = client.patch("/tasks/1/mark_incomplete", headers={"SessionID": one_session.id})
     response_body = response.get_json()
 
     # Assert
@@ -116,9 +116,9 @@ def test_mark_incomplete_on_incomplete_task(client, one_task):
     assert db.session.scalar(db.select(Task).where(Task.id == 1)).completed_at == None
 
 
-def test_mark_complete_missing_task(client):
+def test_mark_complete_missing_task(client, one_session):
     # Act
-    response = client.patch("/tasks/1/mark_complete")
+    response = client.patch("/tasks/1/mark_complete", headers={"SessionID": one_session.id})
     response_body = response.get_json()
 
     # Assert
@@ -126,9 +126,9 @@ def test_mark_complete_missing_task(client):
     assert response_body == dict(details="Unknown Task id: 1")
 
 
-def test_mark_incomplete_missing_task(client):
+def test_mark_incomplete_missing_task(client, one_session):
     # Act
-    response = client.patch("/tasks/1/mark_incomplete")
+    response = client.patch("/tasks/1/mark_incomplete", headers={"SessionID": one_session.id})
     response_body = response.get_json()
 
     # Assert

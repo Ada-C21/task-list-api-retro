@@ -93,8 +93,8 @@ def test_get_tasks_for_specific_goal(client, one_task_belongs_to_one_goal):
     }
 
 
-def test_get_task_includes_goal_id(client, one_task_belongs_to_one_goal):
-    response = client.get("/tasks/1")
+def test_get_task_includes_goal_id(client, one_task_belongs_to_one_goal, one_session):
+    response = client.get("/tasks/1", headers={"SessionID": one_session.id})
     response_body = response.get_json()
 
     assert response.status_code == 200

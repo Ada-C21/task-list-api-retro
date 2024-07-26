@@ -1,11 +1,24 @@
 import pytest
+from unittest import mock
 from app import create_app
 from app.models.task import Task
 from app.models.goal import Goal
-from app import db
+from app.models.user import User
+from app.models.session import Session
+from app.db import db
+from app.bcrypt import bcrypt
 import datetime
 from flask.signals import request_finished
 import os
+from app.services import session_service
+from app.util import time
+
+# writing tests that involve datetime checks can be tricky
+# one package we can investigate is called freezegun
+# we're going to do pretty hacky stuff here just to get the tests to work
+
+TEST_NOW = datetime.datetime(2021, 9, 1, 0, 0, 0, 0, datetime.timezone.utc)
+SESSION_MINUTES = 30
 
 @pytest.fixture
 def app():
@@ -33,14 +46,44 @@ def app():
 def client(app):
     return app.test_client()
 
+@pytest.fixture
+def one_user(app):
+    name = "u1"
+    email = "e1"
+    password = "p"
+    pwd_hash = bcrypt.generate_password_hash(password).decode("utf-8")
+    user = User(name=name, email=email, pwd_hash=pwd_hash)
+
+    db.session.add(user)
+    db.session.commit()
+    return user
+
+@pytest.fixture
+def override_now(monkeypatch):
+    with mock.patch('app.util.time.now', return_value=TEST_NOW):
+        yield
+
+
+@pytest.fixture
+def one_session(app, one_user, override_now):
+    expires_at = TEST_NOW + datetime.timedelta(minutes=SESSION_MINUTES)
+    session = Session(user_id=one_user.id, expires_at=expires_at)
+
+    db.session.add(session)
+    db.session.commit()
+
+    return session
 
 # This fixture gets called in every test that
 # references "one_task"
 # This fixture creates a task and saves it in the database
 @pytest.fixture
-def one_task(app):
+def one_task(one_user):
     new_task = Task(
-        title="Go on my daily walk 🏞", description="Notice something new every day", completed_at=None)
+        title="Go on my daily walk 🏞", 
+        description="Notice something new every day", 
+        completed_at=None, 
+        user_id=one_user.id)
     db.session.add(new_task)
     db.session.commit()
     return new_task
@@ -51,14 +94,14 @@ def one_task(app):
 # This fixture creates three tasks and saves
 # them in the database
 @pytest.fixture
-def three_tasks(app):
+def three_tasks(one_user):
     tasks = [
         Task(
-            title="Water the garden 🌷", description="", completed_at=None),
+            title="Water the garden 🌷", description="", completed_at=None, user_id=one_user.id),
         Task(
-            title="Answer forgotten email 📧", description="", completed_at=None),
+            title="Answer forgotten email 📧", description="", completed_at=None, user_id=one_user.id),
         Task(
-            title="Pay my outstanding tickets 😭", description="", completed_at=None)
+            title="Pay my outstanding tickets 😭", description="", completed_at=None, user_id=one_user.id)
     ]
     db.session.add_all(tasks)
     db.session.commit()
@@ -70,10 +113,13 @@ def three_tasks(app):
 # This fixture creates a task with a
 # valid completed_at date
 @pytest.fixture
-def completed_task(app):
-    completed_at = datetime.datetime.now(datetime.timezone.utc)
+def completed_task(one_user):
+    completed_at = time.now(datetime.timezone.utc)
     new_task = Task(
-        title="Go on my daily walk 🏞", description="Notice something new every day", completed_at=completed_at)
+        title="Go on my daily walk 🏞", 
+        description="Notice something new every day", 
+        completed_at=completed_at, 
+        user_id=one_user.id)
     db.session.add(new_task)
     db.session.commit()
     return completed_task

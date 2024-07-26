@@ -5,6 +5,7 @@ from app.bcrypt import bcrypt
 from app.dto.user_dto import UserDto
 from sqlalchemy.exc import DataError
 from datetime import datetime, timezone, timedelta
+from app.util import time
 
 SESSION_MINUTES = 30
 
@@ -12,13 +13,13 @@ class SessionService:
     def __init__(self, db) -> None:
         self.db = db
 
-    def login(self, email, password, user_service, now_provider=datetime.now):
+    def login(self, email, password, user_service):
         try:
             user = user_service.get_by_auth(email, password)
         except RecordNotFoundError:
             raise InvalidRequestDataError()
 
-        expires_at = now_provider(timezone.utc) + timedelta(minutes=SESSION_MINUTES)
+        expires_at = time.now(timezone.utc) + timedelta(minutes=SESSION_MINUTES)
         session = Session(user_id=user.id, expires_at=expires_at)
 
         db = self.db
@@ -27,17 +28,17 @@ class SessionService:
 
         return session
 
-    def logout(self, id, active_session_id, now_provider=datetime.now):
+    def logout(self, id, active_session_id):
         if id != active_session_id:
             raise InvalidRequestDataError()
 
         session = Session.get_by_id(id)
-        self.expire_session(session, now_provider)
+        self.expire_session(session)
 
-    def get_active(self, id, now_provider=datetime.now):
+    def get_active(self, id):
         db = self.db
         query = db.select(Session).where(Session.id == id,
-                                         Session.expires_at > now_provider(timezone.utc))
+                                         Session.expires_at > time.now(timezone.utc))
         try:
             model = db.session.scalar(query)
         except DataError:
@@ -46,16 +47,16 @@ class SessionService:
         if not model:
             raise InvalidRequestDataError(Session, id)
         
-        self.extend_session(model, now_provider)
+        self.extend_session(model)
         
         return model
 
-    def extend_session(self, session, now_provider=datetime.now):
+    def extend_session(self, session):
         db = self.db
-        session.expires_at = now_provider(timezone.utc) + timedelta(minutes=SESSION_MINUTES)
+        session.expires_at = time.now(timezone.utc) + timedelta(minutes=SESSION_MINUTES)
         db.session.commit()
 
-    def expire_session(self, session, now_provider=datetime.now):
+    def expire_session(self, session):
         db = self.db
-        session.expires_at = now_provider(timezone.utc) - timedelta(minutes=SESSION_MINUTES)
+        session.expires_at = time.now(timezone.utc) - timedelta(minutes=SESSION_MINUTES)
         db.session.commit()

@@ -5,12 +5,12 @@ from app.errors.record_not_found_error import RecordNotFoundError
 from app.models.task import Task
 from sqlalchemy import ScalarResult
 
-def test_get_tasks_no_saved_tasks(test_db):
+def test_get_tasks_no_saved_tasks(test_db, one_user):
     # Arrange
     task_service = TaskService(test_db)
 
     # Act
-    result = task_service.get_tasks()
+    result = task_service.get_tasks(user=one_user)
     result_list = list(result)
 
     # Assert
@@ -18,12 +18,12 @@ def test_get_tasks_no_saved_tasks(test_db):
     assert result_list == []
 
 
-def test_get_tasks_one_saved_tasks(test_db, one_task):
+def test_get_tasks_one_saved_tasks(test_db, one_task, one_user):
     # Arrange
     task_service = TaskService(test_db)
 
     # Act
-    result = task_service.get_tasks()
+    result = task_service.get_tasks(user=one_user)
     result_list = list(result)
 
     # Assert
@@ -35,7 +35,7 @@ def test_get_tasks_one_saved_tasks(test_db, one_task):
     assert result_list[0].is_complete() == False
 
 
-def test_create_task(test_db):
+def test_create_task(test_db, one_user):
     # Arrange
     task_service = TaskService(test_db)
     data = {
@@ -44,17 +44,17 @@ def test_create_task(test_db):
     }
 
     # Act
-    result = task_service.create_task(data)
+    result = task_service.create_task(data, user=one_user)
 
     # Assert
     assert result.id == 1
     assert result.title == "A Brand New Task"
     assert result.description == "Test Description"
     assert result.is_complete() == False
-    assert len(list(task_service.get_tasks())) == 1
+    assert len(list(task_service.get_tasks(user=one_user))) == 1
 
 
-def test_create_task_must_contain_title(test_db):
+def test_create_task_must_contain_title(test_db, one_user):
     # Arrange
     task_service = TaskService(test_db)
     data = {
@@ -63,13 +63,13 @@ def test_create_task_must_contain_title(test_db):
 
     # Act
     with pytest.raises(InvalidRequestDataError):
-        task_service.create_task(data)
+        task_service.create_task(data, user=one_user)
 
     # Assert
-    assert len(list(task_service.get_tasks())) == 0
+    assert len(list(task_service.get_tasks(user=one_user))) == 0
 
 
-def test_create_task_must_contain_description(test_db):
+def test_create_task_must_contain_description(test_db, one_user):
     # Arrange
     task_service = TaskService(test_db)
     data = {
@@ -78,13 +78,13 @@ def test_create_task_must_contain_description(test_db):
 
     # Act
     with pytest.raises(InvalidRequestDataError):
-        task_service.create_task(data)
+        task_service.create_task(data, user=one_user)
 
     # Assert
-    assert len(list(task_service.get_tasks())) == 0
+    assert len(list(task_service.get_tasks(user=one_user))) == 0
 
 
-def test_update_task(test_db, one_task):
+def test_update_task(test_db, one_task, one_user):
     # Arrange
     task_service = TaskService(test_db)
     data = {
@@ -93,11 +93,11 @@ def test_update_task(test_db, one_task):
     }
 
     # Act
-    result = task_service.update_task(one_task, data)
+    result = task_service.update_task(one_task, data, user=one_user)
     fetched_task = Task.get_by_id(one_task.id)
 
     # Assert
-    assert len(list(task_service.get_tasks())) == 1
+    assert len(list(task_service.get_tasks(user=one_user))) == 1
     assert result.title == "Updated Task Title"
     assert result.description == "Updated Test Description"
     assert result.completed_at == None
@@ -106,10 +106,10 @@ def test_update_task(test_db, one_task):
     assert fetched_task.completed_at == None
 
 
-def test_update_task_not_found(test_db):
+def test_update_task_not_found(test_db, one_user):
     # Arrange
     task_service = TaskService(test_db)
-    fake_task = Task(id=1, title="Fake Task", description="Fake Description")
+    fake_task = Task(id=1, title="Fake Task", description="Fake Description", user_id=one_user.id)
     data = {
         "title": "Updated Task Title",
         "description": "Updated Test Description",
@@ -118,32 +118,32 @@ def test_update_task_not_found(test_db):
     # Act
     # Doesn't cause any errors since since the local data can still be updated
     # The internal commit essentially does nothing in this case
-    task_service.update_task(fake_task, data)
+    task_service.update_task(fake_task, data, user=one_user)
 
     # Assert
     # The fake model shouldn't have been added to the database
-    assert len(list(task_service.get_tasks())) == 0
+    assert len(list(task_service.get_tasks(user=one_user))) == 0
 
 
-def test_delete_task(test_db, one_task):
+def test_delete_task(test_db, one_task, one_user):
     # Arrange
     task_service = TaskService(test_db)
 
     # Act
-    task_service.delete_task(one_task)
+    task_service.delete_task(one_task, user=one_user)
 
     # Assert
-    assert len(list(task_service.get_tasks())) == 0
+    assert len(list(task_service.get_tasks(user=one_user))) == 0
 
 
-def test_delete_task_not_found(test_db):
+def test_delete_task_not_found(test_db, one_user):
     # Arrange
     task_service = TaskService(test_db)
     fake_task = Task(id=1, title="Fake Task", description="Fake Description")
 
     # Act
     with pytest.raises(RecordNotFoundError):
-        task_service.delete_task(fake_task)
+        task_service.delete_task(fake_task, user=one_user)
 
     # Assert
-    assert len(list(task_service.get_tasks())) == 0
+    assert len(list(task_service.get_tasks(user=one_user))) == 0

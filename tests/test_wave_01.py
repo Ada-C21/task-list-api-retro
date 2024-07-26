@@ -3,9 +3,9 @@ from app import db
 import pytest
 
 
-def test_get_tasks_no_saved_tasks(client):
+def test_get_tasks_no_saved_tasks(client, one_session):
     # Act
-    response = client.get("/tasks")
+    response = client.get("/tasks", headers={"SessionID": one_session.id})
     response_body = response.get_json()
 
     # Assert
@@ -13,9 +13,9 @@ def test_get_tasks_no_saved_tasks(client):
     assert response_body == []
 
 
-def test_get_tasks_one_saved_tasks(client, one_task):
+def test_get_tasks_one_saved_tasks(client, one_task, one_session):
     # Act
-    response = client.get("/tasks")
+    response = client.get("/tasks", headers={"SessionID": one_session.id})
     response_body = response.get_json()
 
     # Assert
@@ -31,9 +31,9 @@ def test_get_tasks_one_saved_tasks(client, one_task):
     ]
 
 
-def test_get_task(client, one_task):
+def test_get_task(client, one_task, one_session):
     # Act
-    response = client.get("/tasks/1")
+    response = client.get("/tasks/1", headers={"SessionID": one_session.id})
     response_body = response.get_json()
 
     # Assert
@@ -49,9 +49,9 @@ def test_get_task(client, one_task):
     }
 
 
-def test_get_task_not_found(client):
+def test_get_task_not_found(client, one_session):
     # Act
-    response = client.get("/tasks/1")
+    response = client.get("/tasks/1", headers={"SessionID": one_session.id})
     response_body = response.get_json()
 
     # Assert
@@ -59,12 +59,12 @@ def test_get_task_not_found(client):
     assert response_body == dict(details="Unknown Task id: 1")
 
 
-def test_create_task(client):
+def test_create_task(client, one_session):
     # Act
     response = client.post("/tasks", json={
         "title": "A Brand New Task",
         "description": "Test Description",
-    })
+    }, headers={"SessionID": one_session.id})
     response_body = response.get_json()
 
     # Assert
@@ -85,12 +85,12 @@ def test_create_task(client):
     assert new_task.completed_at == None
 
 
-def test_update_task(client, one_task):
+def test_update_task(client, one_task, one_session):
     # Act
     response = client.put("/tasks/1", json={
         "title": "Updated Task Title",
         "description": "Updated Test Description",
-    })
+    }, headers={"SessionID": one_session.id})
     response_body = response.get_json()
 
     # Assert
@@ -110,12 +110,12 @@ def test_update_task(client, one_task):
     assert task.completed_at == None
 
 
-def test_update_task_not_found(client):
+def test_update_task_not_found(client, one_session):
     # Act
     response = client.put("/tasks/1", json={
         "title": "Updated Task Title",
         "description": "Updated Test Description",
-    })
+    }, headers={"SessionID": one_session.id})
     response_body = response.get_json()
 
     # Assert
@@ -123,18 +123,18 @@ def test_update_task_not_found(client):
     assert response_body == dict(details="Unknown Task id: 1")
 
 
-def test_delete_task(client, one_task):
+def test_delete_task(client, one_task, one_session):
     # Act
-    response = client.delete("/tasks/1")
+    response = client.delete("/tasks/1", headers={"SessionID": one_session.id})
 
     # Assert
     assert response.status_code == 204
     assert db.session.scalar(db.select(Task).where(Task.id == 1)) == None
 
 
-def test_delete_task_not_found(client):
+def test_delete_task_not_found(client, one_session):
     # Act
-    response = client.delete("/tasks/1")
+    response = client.delete("/tasks/1", headers={"SessionID": one_session.id})
     response_body = response.get_json()
 
     # Assert
@@ -143,11 +143,11 @@ def test_delete_task_not_found(client):
     assert Task.query.all() == []
 
 
-def test_create_task_must_contain_title(client):
+def test_create_task_must_contain_title(client, one_session):
     # Act
     response = client.post("/tasks", json={
         "description": "Test Description"
-    })
+    }, headers={"SessionID": one_session.id})
     response_body = response.get_json()
 
     # Assert
@@ -159,11 +159,11 @@ def test_create_task_must_contain_title(client):
     assert Task.query.all() == []
 
 
-def test_create_task_must_contain_description(client):
+def test_create_task_must_contain_description(client, one_session):
     # Act
     response = client.post("/tasks", json={
         "title": "A Brand New Task"
-    })
+    }, headers={"SessionID": one_session.id})
     response_body = response.get_json()
 
     # Assert
