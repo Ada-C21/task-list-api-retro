@@ -24,7 +24,8 @@ def test_mark_complete_on_incomplete_task(client, one_task, one_session):
         mock_get.return_value.status_code = 200
 
         # Act
-        response = client.patch("/tasks/1/mark_complete", headers={"SessionID": one_session.id})
+        client.set_cookie("SessionID", str(one_session.id))
+        response = client.patch("/tasks/1/mark_complete")
     response_body = response.get_json()
 
     # Assert
@@ -44,7 +45,8 @@ def test_mark_complete_on_incomplete_task(client, one_task, one_session):
 
 def test_mark_incomplete_on_complete_task(client, completed_task, one_session):
     # Act
-    response = client.patch("/tasks/1/mark_incomplete", headers={"SessionID": one_session.id})
+    client.set_cookie("SessionID", str(one_session.id))
+    response = client.patch("/tasks/1/mark_incomplete")
     response_body = response.get_json()
 
     # Assert
@@ -79,7 +81,8 @@ def test_mark_complete_on_completed_task(client, completed_task, one_session):
         mock_get.return_value.status_code = 200
 
         # Act
-        response = client.patch("/tasks/1/mark_complete", headers={"SessionID": one_session.id})
+        client.set_cookie("SessionID", str(one_session.id))
+        response = client.patch("/tasks/1/mark_complete")
     response_body = response.get_json()
 
     # Assert
@@ -99,7 +102,8 @@ def test_mark_complete_on_completed_task(client, completed_task, one_session):
 
 def test_mark_incomplete_on_incomplete_task(client, one_task, one_session):
     # Act
-    response = client.patch("/tasks/1/mark_incomplete", headers={"SessionID": one_session.id})
+    client.set_cookie("SessionID", str(one_session.id))
+    response = client.patch("/tasks/1/mark_incomplete")
     response_body = response.get_json()
 
     # Assert
@@ -118,7 +122,8 @@ def test_mark_incomplete_on_incomplete_task(client, one_task, one_session):
 
 def test_mark_complete_missing_task(client, one_session):
     # Act
-    response = client.patch("/tasks/1/mark_complete", headers={"SessionID": one_session.id})
+    client.set_cookie("SessionID", str(one_session.id))
+    response = client.patch("/tasks/1/mark_complete")
     response_body = response.get_json()
 
     # Assert
@@ -128,7 +133,8 @@ def test_mark_complete_missing_task(client, one_session):
 
 def test_mark_incomplete_missing_task(client, one_session):
     # Act
-    response = client.patch("/tasks/1/mark_incomplete", headers={"SessionID": one_session.id})
+    client.set_cookie("SessionID", str(one_session.id))
+    response = client.patch("/tasks/1/mark_incomplete")
     response_body = response.get_json()
 
     # Assert

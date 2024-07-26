@@ -44,7 +44,9 @@ def test_serialize_with_one_task(one_task):
     def mock_route():
         return one_task
 
-    result, status = mock_route()
+    response = mock_route()
+    result = response.get_json()
+    status = response.status_code
     assert result == {
         "task": {
             "id": 1,

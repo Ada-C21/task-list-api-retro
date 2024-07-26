@@ -5,7 +5,8 @@ import pytest
 
 def test_get_tasks_no_saved_tasks(client, one_session):
     # Act
-    response = client.get("/tasks", headers={"SessionID": one_session.id})
+    client.set_cookie("SessionID", str(one_session.id))
+    response = client.get("/tasks")
     response_body = response.get_json()
 
     # Assert
@@ -15,7 +16,8 @@ def test_get_tasks_no_saved_tasks(client, one_session):
 
 def test_get_tasks_one_saved_tasks(client, one_task, one_session):
     # Act
-    response = client.get("/tasks", headers={"SessionID": one_session.id})
+    client.set_cookie("SessionID", str(one_session.id))
+    response = client.get("/tasks")
     response_body = response.get_json()
 
     # Assert
@@ -33,7 +35,8 @@ def test_get_tasks_one_saved_tasks(client, one_task, one_session):
 
 def test_get_task(client, one_task, one_session):
     # Act
-    response = client.get("/tasks/1", headers={"SessionID": one_session.id})
+    client.set_cookie("SessionID", str(one_session.id))
+    response = client.get("/tasks/1")
     response_body = response.get_json()
 
     # Assert
@@ -51,7 +54,8 @@ def test_get_task(client, one_task, one_session):
 
 def test_get_task_not_found(client, one_session):
     # Act
-    response = client.get("/tasks/1", headers={"SessionID": one_session.id})
+    client.set_cookie("SessionID", str(one_session.id))
+    response = client.get("/tasks/1")
     response_body = response.get_json()
 
     # Assert
@@ -61,10 +65,11 @@ def test_get_task_not_found(client, one_session):
 
 def test_create_task(client, one_session):
     # Act
+    client.set_cookie("SessionID", str(one_session.id))
     response = client.post("/tasks", json={
         "title": "A Brand New Task",
         "description": "Test Description",
-    }, headers={"SessionID": one_session.id})
+    })
     response_body = response.get_json()
 
     # Assert
@@ -87,10 +92,11 @@ def test_create_task(client, one_session):
 
 def test_update_task(client, one_task, one_session):
     # Act
+    client.set_cookie("SessionID", str(one_session.id))
     response = client.put("/tasks/1", json={
         "title": "Updated Task Title",
         "description": "Updated Test Description",
-    }, headers={"SessionID": one_session.id})
+    })
     response_body = response.get_json()
 
     # Assert
@@ -112,10 +118,11 @@ def test_update_task(client, one_task, one_session):
 
 def test_update_task_not_found(client, one_session):
     # Act
+    client.set_cookie("SessionID", str(one_session.id))
     response = client.put("/tasks/1", json={
         "title": "Updated Task Title",
         "description": "Updated Test Description",
-    }, headers={"SessionID": one_session.id})
+    })
     response_body = response.get_json()
 
     # Assert
@@ -125,7 +132,8 @@ def test_update_task_not_found(client, one_session):
 
 def test_delete_task(client, one_task, one_session):
     # Act
-    response = client.delete("/tasks/1", headers={"SessionID": one_session.id})
+    client.set_cookie("SessionID", str(one_session.id))
+    response = client.delete("/tasks/1")
 
     # Assert
     assert response.status_code == 204
@@ -134,7 +142,8 @@ def test_delete_task(client, one_task, one_session):
 
 def test_delete_task_not_found(client, one_session):
     # Act
-    response = client.delete("/tasks/1", headers={"SessionID": one_session.id})
+    client.set_cookie("SessionID", str(one_session.id))
+    response = client.delete("/tasks/1")
     response_body = response.get_json()
 
     # Assert
@@ -145,9 +154,10 @@ def test_delete_task_not_found(client, one_session):
 
 def test_create_task_must_contain_title(client, one_session):
     # Act
+    client.set_cookie("SessionID", str(one_session.id))
     response = client.post("/tasks", json={
         "description": "Test Description"
-    }, headers={"SessionID": one_session.id})
+    })
     response_body = response.get_json()
 
     # Assert
@@ -161,9 +171,10 @@ def test_create_task_must_contain_title(client, one_session):
 
 def test_create_task_must_contain_description(client, one_session):
     # Act
+    client.set_cookie("SessionID", str(one_session.id))
     response = client.post("/tasks", json={
         "title": "A Brand New Task"
-    }, headers={"SessionID": one_session.id})
+    })
     response_body = response.get_json()
 
     # Assert
