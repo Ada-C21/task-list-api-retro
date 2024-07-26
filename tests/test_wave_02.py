@@ -1,9 +1,9 @@
 import pytest
 
 
-def test_get_tasks_sorted_asc(client, three_tasks):
+def test_get_tasks_sorted_asc(client, three_tasks, one_session):
     # Act
-    response = client.get("/tasks?sort=asc")
+    response = client.get("/tasks?sort=asc", headers={"SessionID": one_session.id})
     response_body = response.get_json()
 
     # Assert
@@ -28,9 +28,9 @@ def test_get_tasks_sorted_asc(client, three_tasks):
     ]
 
 
-def test_get_tasks_sorted_desc(client, three_tasks):
+def test_get_tasks_sorted_desc(client, three_tasks, one_session):
     # Act
-    response = client.get("/tasks?sort=desc")
+    response = client.get("/tasks?sort=desc", headers={"SessionID": one_session.id})
     response_body = response.get_json()
 
     # Assert

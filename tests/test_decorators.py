@@ -3,14 +3,16 @@ from app.routes.task_helpers import require_task
 from app.routes.helpers import serialize_with
 from app.serializers.one_task import OneTask
 from werkzeug.exceptions import HTTPException
+from flask import g
 
-def test_require_task_with_one_task(one_task):
+def test_require_task_with_one_task(one_task, one_session):
     # Arrange
     @require_task
     def mock_route(task):
         return task
     
     # Act
+    g.user = one_session.user
     result = mock_route(task_id=1)
 
     # Assert
@@ -19,7 +21,7 @@ def test_require_task_with_one_task(one_task):
     assert result.description == "Notice something new every day"
     assert result.is_complete() == False
 
-def test_require_task_with_no_task(app):
+def test_require_task_with_no_task(one_session):
     # Arrange
     @require_task
     def mock_route(task):
@@ -27,6 +29,7 @@ def test_require_task_with_no_task(app):
     
     # Act
     with pytest.raises(HTTPException) as exc_info:
+        g.user = one_session.user
         result = mock_route(task_id=1)
 
     # Assert

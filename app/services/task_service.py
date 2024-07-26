@@ -4,6 +4,7 @@ from app.errors.record_not_found_error import RecordNotFoundError
 import datetime
 from ..ext.slack import notify_complete
 from sqlalchemy.exc import InvalidRequestError
+from app.util import time
 
 class TaskService:
     def __init__(self, db) -> None:
@@ -69,7 +70,7 @@ class TaskService:
         if task.user_id != user.id:
             raise RecordNotFoundError()
 
-        task.completed_at = datetime.datetime.now(datetime.timezone.utc)
+        task.completed_at = time.now(datetime.timezone.utc)
 
         db = self.db
         db.session.commit()
